@@ -1,0 +1,114 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Strategy Tap Counter</title>
+<style>
+body{font-family:Arial;background:#f3f3f3;padding:20px}
+.card{max-width:720px;margin:auto;background:#fff;padding:20px;border-radius:16px}
+input,button{width:100%;padding:12px;border:1px solid #ccc;border-radius:10px;box-sizing:border-box}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+.box{background:#f8f8f8;padding:12px;border-radius:12px;text-align:center}
+.big{font-size:32px;font-weight:bold}
+button{cursor:pointer}
+@media(max-width:600px){.grid,.stats{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="card">
+<h2>Bet Strategy Tap Counter</h2>
+
+<label>Strategy Title</label>
+<input id="strategyTitle" placeholder="Example: Conservative 3x Strategy">
+
+<h3 id="titleView">No strategy title</h3>
+
+<div class="grid">
+<button id="winBtn">✅ Tap Win</button>
+<button id="lossBtn">❌ Tap Loss</button>
+</div>
+
+<div class="stats">
+<div class="box">Wins<div class="big" id="wins">0</div></div>
+<div class="box">Losses<div class="big" id="losses">0</div></div>
+<div class="box">Total<div class="big" id="total">0</div></div>
+</div>
+
+<div class="grid" style="margin-top:14px">
+<button id="undoBtn">↩ Delete Last Tap</button>
+<button id="resetBtn">🗑 Reset Counts</button>
+</div>
+
+<p id="status"></p>
+
+<script>
+let state={wins:0,losses:0,title:"",history:[]};
+
+function save(){
+ localStorage.setItem("bet_strategy_counter",JSON.stringify(state));
+}
+function load(){
+ const saved=localStorage.getItem("bet_strategy_counter");
+ if(saved){ state=JSON.parse(saved); }
+}
+
+function update(){
+ document.getElementById("wins").textContent=state.wins;
+ document.getElementById("losses").textContent=state.losses;
+ document.getElementById("total").textContent=state.wins+state.losses;
+
+ document.getElementById("strategyTitle").value=state.title;
+ document.getElementById("titleView").textContent=state.title || "No strategy title";
+
+ let msg="No taps yet";
+ if(state.history.length){
+   msg="Last action: "+state.history[state.history.length-1];
+ }
+ document.getElementById("status").textContent=msg;
+
+ save();
+}
+
+function add(type){
+ if(type==="win") state.wins++;
+ if(type==="loss") state.losses++;
+ state.history.push(type);
+ update();
+}
+
+function undo(){
+ const last=state.history.pop();
+ if(last==="win" && state.wins>0) state.wins--;
+ if(last==="loss" && state.losses>0) state.losses--;
+ update();
+}
+
+function resetAll(){
+ if(confirm("Reset all counts?")){
+   state.wins=0;
+   state.losses=0;
+   state.history=[];
+   update();
+ }
+}
+
+document.getElementById("winBtn").onclick=()=>add("win");
+document.getElementById("lossBtn").onclick=()=>add("loss");
+document.getElementById("undoBtn").onclick=undo;
+document.getElementById("resetBtn").onclick=resetAll;
+
+document.getElementById("strategyTitle").addEventListener("input",(e)=>{
+ state.title=e.target.value;
+ update();
+});
+
+load();
+update();
+</script>
+
+</div>
+</body>
+</html>
